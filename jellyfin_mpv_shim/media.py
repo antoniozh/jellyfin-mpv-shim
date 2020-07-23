@@ -134,6 +134,15 @@ class Video(object):
         # - If there's a scheme specified or the path exists as a local file.
         if ((self.media_source.get('Protocol') == "Http" or self.media_source['SupportsDirectPlay'])
             and settings.direct_paths and (settings.remote_direct_paths or self.parent.is_local)):
+
+            if platform.startswith("win32") or platform.startswith("cygwin"):
+                    # matches on SMB scheme
+                    match = re.search('(?:\\\\).+:.*@(.+)', self.media_source['Path'])
+                    if match:
+                        # replace forward slash to backward slashes
+                        log.debug("cleaned up credentials from path")
+                        self.media_source['Path'] = str(pathlib.Path('\\\\' + match.groups()[0]))
+
             if urllib.parse.urlparse(self.media_source['Path']).scheme:
                 self.is_transcode = False
                 log.debug("Using remote direct path.")
